@@ -6,6 +6,6 @@ namespace JWTWebApiAuth.Core.Dtos
     {
 
         [Required(ErrorMessage = "UserName is required")]
-        public int UserName { get; set; }
+        public string UserName { get; set; }
   }
 } 
