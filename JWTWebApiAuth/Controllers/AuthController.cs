@@ -1,4 +1,5 @@
 ﻿using JWTWebApiAuth.Core.Dtos;
+using JWTWebApiAuth.Core.Entities;
 using JWTWebApiAuth.Core.OtherObject;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -16,11 +17,11 @@ namespace JWTWebApiAuth.Controllers
 
     public class AuthController : ControllerBase
     {
-        private readonly UserManager<IdentityUser> _userManager;
+        private readonly UserManager<ApplicationUser> _userManager;
         private readonly RoleManager<IdentityRole> _roleManager;
         private readonly IConfiguration _configuration; // Use consistent naming
 
-        public AuthController(UserManager<IdentityUser> userManager, RoleManager<IdentityRole> roleManager, IConfiguration configuration)
+        public AuthController(UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager, IConfiguration configuration)
         {
             _userManager = userManager;
             _roleManager = roleManager;
@@ -63,8 +64,10 @@ namespace JWTWebApiAuth.Controllers
             if (isExistsUser != null)
                 return BadRequest("UserName Already Exists");
 
-            IdentityUser newUser = new IdentityUser()
+            ApplicationUser newUser = new ApplicationUser()
             {
+                Firstname = registerDto.Firstname,
+                Lastname = registerDto.Lastname,
                 Email = registerDto.Email,
                 UserName = registerDto.UserName,
                 SecurityStamp = Guid.NewGuid().ToString(),
@@ -113,6 +116,8 @@ namespace JWTWebApiAuth.Controllers
                 new Claim(ClaimTypes.Name, user.UserName),
                 new Claim(ClaimTypes.NameIdentifier, user.Id),
                 new Claim("JWTID", Guid.NewGuid().ToString()),
+                new Claim("FirstName", user.Firstname),
+                new Claim("LastName", user.Lastname)
 
 
             };

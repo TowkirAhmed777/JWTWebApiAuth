@@ -5,6 +5,15 @@ namespace JWTWebApiAuth.Core.Dtos
     public class RegisterDto
     {
 
+
+        [Required(ErrorMessage = "Firstname is required")]
+        public string Firstname { get; set; }
+
+        [Required(ErrorMessage = "Lastname is required")]
+        public string Lastname { get; set; }
+
+
+
         [Required(ErrorMessage = "UserName is required")]
         public string UserName { get; set; }
 
