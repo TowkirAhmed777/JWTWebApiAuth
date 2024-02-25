@@ -1,24 +1,28 @@
+using JwtAuthAspNet7WebAPI.Core.Services;
 using JWTWebApiAuth.Core.DbContext;
 using JWTWebApiAuth.Core.Entities;
+using JWTWebApiAuth.Core.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
 
 builder.Services.AddControllers();
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
 // Add DB
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
 {
     var connectionString = builder.Configuration.GetConnectionString("local");
     options.UseSqlServer(connectionString);
-
 });
 
 // Add Identity
@@ -28,36 +32,31 @@ builder.Services
     .AddDefaultTokenProviders();
 
 
-
-
-//Config Identity
-builder.Services.Configure<IdentityOptions>(Options =>
+// Config Identity
+builder.Services.Configure<IdentityOptions>(options =>
 {
-    Options.Password.RequiredLength = 8;
-    Options.Password.RequireDigit = false;
-    Options.Password.RequireLowercase = false;
-    Options.Password.RequireUppercase = false;
-    Options.Password.RequireNonAlphanumeric = false;
-    Options.SignIn.RequireConfirmedEmail = false;
+    options.Password.RequiredLength = 3;
+    options.Password.RequireDigit = false;
+    options.Password.RequireLowercase = false;
+    options.Password.RequireUppercase = false;
+    options.Password.RequireNonAlphanumeric = false;
+    options.SignIn.RequireConfirmedEmail = false;
 });
 
 
-
-
-//Add Authentication and JwtBearer
+// Add Authentication and JwtBearer
 builder.Services
-    .AddAuthentication(Options =>
+    .AddAuthentication(options =>
     {
-        Options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
-        Options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-        Options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+        options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+        options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+        options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
     })
-
-   .AddJwtBearer(Options =>
+    .AddJwtBearer(options =>
     {
-        Options.SaveToken = true;
-        Options.RequireHttpsMetadata = false;
-        Options.TokenValidationParameters = new TokenValidationParameters()
+        options.SaveToken = true;
+        options.RequireHttpsMetadata = false;
+        options.TokenValidationParameters = new TokenValidationParameters()
         {
             ValidateIssuer = true,
             ValidateAudience = true,
@@ -69,7 +68,44 @@ builder.Services
 
 
 
-//pipeline
+
+// Inject app Dependencies (Dependency Injection)
+builder.Services.AddScoped<IAuthService, AuthService>();
+
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(options =>
+{
+    options.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+    {
+        Name = "Authorization",
+        In = Microsoft.OpenApi.Models.ParameterLocation.Header,
+        Description = "Please enter your token with this format: ''Bearer YOUR_TOKEN''",
+        Type = Microsoft.OpenApi.Models.SecuritySchemeType.ApiKey,
+        BearerFormat = "JWT",
+        Scheme = "bearer"
+    });
+    options.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Name = "Bearer",
+                In = ParameterLocation.Header,
+                Reference = new OpenApiReference
+                {
+                    Id = "Bearer",
+                    Type = ReferenceType.SecurityScheme
+                }
+            },
+            new List<string>()
+        }
+    });
+});
+
+
+
+
+// pipeline
 var app = builder.Build();
 
 
